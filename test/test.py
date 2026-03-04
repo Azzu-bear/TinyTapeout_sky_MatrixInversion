@@ -1,5 +1,5 @@
 # =============================================================================
-# test_solve2x2_seq.py  —  Cocotb testbench for tt_um_solve2x2_q16 (sequential edition)
+# test_solve2x2_seq.py  —  Cocotb testbench for tt_um_solve2x2 (sequential edition)
 #
 # Differences from original:
 # - DUT no longer produces output on a fixed cycle after input streaming
@@ -360,7 +360,7 @@ async def test_all_passed_summary(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await ClockCycles(dut.clk, 5)
     dut._log.info("==========================================================")
-    dut._log.info("      DONE: tt_um_solve2x2_q16 Q4.4 Verification Complete ")
+    dut._log.info("      DONE: tt_um_solve2x2 Q4.4 Verification Complete ")
     dut._log.info("            ALL TESTS PASSED SUCCESSFULLY!                ")
     dut._log.info("==========================================================")
     await ClockCycles(dut.clk, 2)
