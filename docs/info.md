@@ -58,26 +58,7 @@ temporarily store numerators to reduce flip-flop count.
 # FSM Logic Flow
 
 The solver runs on a **12-state finite state machine** that schedules the shared hardware resources.
-
-```dot
-digraph G {
-    rankdir=LR;
-    node [shape=circle];
-    
-    S_IDLE -> S_LOAD  [label="start"];
-    S_LOAD -> S_DET_A
-    S_DET_A -> S_DET_B
-    S_DET_B -> S_NUM0A
-    S_NUM0A -> S_NUM0B
-    S_NUM0B -> S_NUM1A
-    S_NUM1A -> S_NUM1B
-    S_NUM1B -> S_DIV0
-    S_DIV0 -> S_DIV1
-    S_DIV1 -> S_LATCH
-    S_LATCH -> S_DONE
-    S_DONE -> S_IDLE
-}
-```
+![FSM] (fsm.png)
 
 ---
 
