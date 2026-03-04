@@ -2,7 +2,7 @@
 project:
   title:        "Sequential 2x2 Matrix Inversion Solver"
   author:       "Azam Mohamed"
-  discord:      "an7ut"
+  discord:      "ans7ut"
   description:  "Sequential Q4.4 matrix solver (Ax=b) using a shared 13-bit accumulator."
   language:     "Verilog"
   clock_hz:     50000000       # 50 MHz
