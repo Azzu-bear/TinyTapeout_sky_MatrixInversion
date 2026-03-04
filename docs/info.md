@@ -58,8 +58,8 @@ temporarily store numerators to reduce flip-flop count.
 # FSM Logic Flow
 
 The solver runs on a **12-state finite state machine** that schedules the shared hardware resources.
-![FSM] (fsm.png)
 
+![FSM] (fsm.png)
 ---
 
 # Pinout Mapping
