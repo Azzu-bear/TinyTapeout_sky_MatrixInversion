@@ -1,0 +1,187 @@
+digraph ASIC_Datapath {
+  // --- Global style (ASIC-ish block diagram) ---
+  rankdir=LR;
+  splines=ortho;
+  nodesep=0.55;
+  ranksep=0.90;
+  bgcolor="white";
+
+  graph [fontname="Helvetica"];
+  node  [fontname="Helvetica", fontsize=10];
+  edge  [fontname="Helvetica", fontsize=9, arrowsize=0.8, penwidth=1.2];
+
+  // Helper styles
+  // (Using records + ports to keep wiring clean)
+  // Use ortho edges for right angles; avoid edge labels (they get messy).
+  // If you really want labels later, use xlabel=... sparingly.
+
+  // -------------------------
+  // LEFT: External IO
+  // -------------------------
+  subgraph cluster_io {
+    label="IO";
+    color="#B0B0B0";
+    style="rounded";
+
+    ui_in  [shape=record, style="rounded,filled", fillcolor="#F5F5F5",
+            label="{ ui_in[3:0] | 4-bit signed stream\\n(a,b,c,d,e,f) }"];
+
+    uio_in [shape=record, style="rounded,filled", fillcolor="#F5F5F5",
+            label="{ { uio_in[0] | start } | { uio_in[1] | sel (x0/x1) } }"];
+
+    uo_out [shape=record, style="rounded,filled", fillcolor="#F5F5F5",
+            label="{ uo_out[7:0] | Q4.4 result }"];
+
+    uio_out [shape=record, style="rounded,filled", fillcolor="#F5F5F5",
+             label="{ { uio_out[0] | valid } | { uio_out[1] | singular } | { uio_out[2] | overflow } }"];
+  }
+
+  // -------------------------
+  // CONTROL (top rail)
+  // -------------------------
+  subgraph cluster_ctrl {
+    label="Control";
+    color="#9DB7FF";
+    style="rounded";
+
+    fsm [shape=record, style="rounded,filled", fillcolor="#E9F0FF",
+         label="{ FSM (12 states) | { load cnt | MAC schedule | div phases | latch/valid flags } }"];
+  }
+
+  // -------------------------
+  // DATA REGISTERS (input RF + result regs)
+  // -------------------------
+  subgraph cluster_regs {
+    label="Registers";
+    color="#7CC47C";
+    style="rounded";
+
+    rf [shape=record, style="rounded,filled", fillcolor="#EFFFF0",
+        label="{ Input RF | {<a>a[3:0] | <b>b[3:0] | <c>c[3:0] | <d>d[3:0] | <e>e[3:0] | <f>f[3:0]} }"];
+
+    regs2 [shape=record, style="rounded,filled", fillcolor="#EFFFF0",
+          label="{ Intermediate/Output Regs | {<det>det[12:0] | <x0>x0_r[12:0] | <x1>x1_r[12:0]} }"];
+  }
+
+  // -------------------------
+  // DATAPATH (main rail)
+  // -------------------------
+  subgraph cluster_dp {
+    label="Datapath";
+    color="#FFC07A";
+    style="rounded";
+
+    muxA [shape=record, style="rounded,filled", fillcolor="#FFF2E5",
+          label="{ Operand MUX A | <out>opA[3:0] }"];
+
+    muxB [shape=record, style="rounded,filled", fillcolor="#FFF2E5",
+          label="{ Operand MUX B | <out>opB[3:0] }"];
+
+    mul  [shape=record, style="rounded,filled", fillcolor="#FFF2E5",
+          label="{ 4x4 Signed Multiplier | <p>prod[7:0] }"];
+
+    acc  [shape=record, style="rounded,filled", fillcolor="#FFF2E5",
+          label="{ 13-bit Accumulator (acc) | {<din>din[12:0] | <dout>dout[12:0]} }"];
+
+    div  [shape=record, style="rounded,filled", fillcolor="#FFF2E5",
+          label="{ Restoring Divider (seq) | {<n>numer[12:0] | <d>denom[12:0] | <q>quot[12:0]} }"];
+
+    sat  [shape=record, style="rounded,filled", fillcolor="#FFF2E5",
+          label="{ Q4.4 Pack + Saturate | <y>y[7:0] }"];
+
+    outmux [shape=record, style="rounded,filled", fillcolor="#FFF2E5",
+           label="{ Output MUX | <y>y[7:0] }"];
+  }
+
+  // -------------------------
+  // Layout constraints (ranks)
+  // -------------------------
+  { rank=same; ui_in; uio_in; }
+  { rank=same; rf; }
+  { rank=same; muxA; muxB; }
+  { rank=same; mul; }
+  { rank=same; acc; }
+  { rank=same; regs2; }
+  { rank=same; div; }
+  { rank=same; sat; outmux; }
+  { rank=same; uo_out; uio_out; }
+
+  // -------------------------
+  // Connections: IO -> RF
+  // -------------------------
+  ui_in -> rf [style=bold];
+
+  // -------------------------
+  // RF -> MUXes (fan-in)
+  // Use fewer explicit edges to keep the drawing clean.
+  // -------------------------
+  rf:a -> muxA [constraint=false];
+  rf:b -> muxA [constraint=false];
+  rf:c -> muxA [constraint=false];
+  rf:d -> muxA [constraint=false];
+  rf:e -> muxA [constraint=false];
+  rf:f -> muxA [constraint=false];
+
+  rf:a -> muxB [constraint=false];
+  rf:b -> muxB [constraint=false];
+  rf:c -> muxB [constraint=false];
+  rf:d -> muxB [constraint=false];
+  rf:e -> muxB [constraint=false];
+  rf:f -> muxB [constraint=false];
+
+  // -------------------------
+  // MUX -> MUL -> ACC
+  // -------------------------
+  muxA:out -> mul [style=bold];
+  muxB:out -> mul [style=bold];
+  mul:p    -> acc:din [style=bold];
+
+  // -------------------------
+  // ACC -> intermediate regs
+  // (det and numerators staged into det/x0/x1 regs)
+  // -------------------------
+  acc:dout -> regs2:det [style=bold];
+  acc:dout -> regs2:x0  [style=bold];
+  acc:dout -> regs2:x1  [style=bold];
+
+  // -------------------------
+  // Division path (two phases)
+  // Use bold for main data, dashed for "phase scheduling" conceptual flow.
+  // -------------------------
+  regs2:x0  -> div:n [style=bold];
+  regs2:x1  -> div:n [style=bold];
+  regs2:det -> div:d [style=bold];
+
+  div:q -> sat [style=bold];
+
+  // Store back results (optional visual; can be omitted if cluttery)
+  sat:y -> regs2:x0 [style=dashed, constraint=false];
+  sat:y -> regs2:x1 [style=dashed, constraint=false];
+
+  // -------------------------
+  // Output selection -> outputs
+  // -------------------------
+  regs2:x0 -> outmux [style=bold];
+  regs2:x1 -> outmux [style=bold];
+  sat:y    -> outmux [style=bold];
+
+  outmux:y -> uo_out [style=bold];
+
+  // -------------------------
+  // Status outputs
+  // -------------------------
+  fsm -> uio_out [style=bold];
+
+  // -------------------------
+  // Control wiring (dashed, top rail)
+  // -------------------------
+  uio_in -> fsm [style=bold];
+
+  fsm -> rf   [style=dashed, constraint=false];
+  fsm -> muxA [style=dashed, constraint=false];
+  fsm -> muxB [style=dashed, constraint=false];
+  fsm -> acc  [style=dashed, constraint=false];
+  fsm -> div  [style=dashed, constraint=false];
+  fsm -> sat  [style=dashed, constraint=false];
+  fsm -> outmux [style=dashed, constraint=false];
+}

@@ -29,7 +29,7 @@ The system solution is:
 ---
 
 # Optimized Datapath
-
+![Datapath](datapath.png)
 To keep the design small enough for TinyTapeout, the solver uses a **sequential compute architecture**.
 
 ### Shared Multiplier
