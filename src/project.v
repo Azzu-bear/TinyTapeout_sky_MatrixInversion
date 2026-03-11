@@ -96,7 +96,7 @@ module tt_um_solve2x2 (
                         singular_r <= 1'b1; x0_r <= 0; x1_r <= 0;
                         valid_r <= 1'b1; state <= S_DONE;
                     end else begin
-                        acc <= $signed(x0_r) <<< 4;
+                        acc <= {{5{x0_r[7]}}, x0_r} <<< 4;
                         div_start <= 1'b1; div_phase <= 1'b0; state <= S_DIV1;
                     end
                 end
@@ -105,7 +105,7 @@ module tt_um_solve2x2 (
                     if (div_phase == 1'b0) begin
                         x0_r <= (div_quotient > 127) ? 8'h7F : (div_quotient < -128) ? 8'h80 : div_quotient[7:0];
                         overflow_r <= (div_quotient > 127 || div_quotient < -128);
-                        acc <= $signed(x1_r) <<< 4;
+                        acc <= {{5{x1_r[7]}}, x1_r} <<< 4;
                         div_start <= 1'b1; div_phase <= 1'b1; state <= S_DIV1;
                     end else begin
                         x1_r <= (div_quotient > 127) ? 8'h7F : (div_quotient < -128) ? 8'h80 : div_quotient[7:0];
