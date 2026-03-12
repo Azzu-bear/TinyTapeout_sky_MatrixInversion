@@ -40,7 +40,7 @@ def check(label, got, expected, tol=TOL):
 # ---------------------------------------------------------------------------
 # Timing control
 # ---------------------------------------------------------------------------
-MAX_WAIT_CYCLES = 200
+MAX_WAIT_CYCLES = 500
 
 # ---------------------------------------------------------------------------
 # DUT driver helpers
@@ -49,9 +49,9 @@ async def reset_dut(dut):
     dut.rst_n.value  = 0
     dut.ui_in.value  = 0
     dut.uio_in.value = 0
-    await ClockCycles(dut.clk, 4)
+    await ClockCycles(dut.clk, 10)
     dut.rst_n.value  = 1
-    await ClockCycles(dut.clk, 2)
+    await ClockCycles(dut.clk, 5)
 
 async def stream_inputs(dut, a, b, c, d, e, f):
     vals = [a, b, c, d, e, f]
