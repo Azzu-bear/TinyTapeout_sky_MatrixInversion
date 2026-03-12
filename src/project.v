@@ -62,7 +62,7 @@ module tt_um_solve2x2 (
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state <= S_IDLE; load_cnt <= 0; div_phase <= 0;
+            state <= S_IDLE; load_cnt <= 0; div_phase <= 0; div_start <= 1'b0;
             a <= 0; b <= 0; c <= 0; d <= 0; e <= 0; f <= 0;
             acc <= 0; det_save <= 0; x0_r <= 0; x1_r <= 0;
             valid_r <= 0; singular_r <= 0; overflow_r <= 0;
