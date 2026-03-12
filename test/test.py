@@ -51,10 +51,11 @@ async def reset_dut(dut):
     dut.uio_in.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value  = 1
-    await ClockCycles(dut.clk, 5)
+    await ClockCycles(dut.clk, 10)
 
 async def stream_inputs(dut, a, b, c, d, e, f):
     vals = [a, b, c, d, e, f]
+    await RisingEdge(dut.clk)
 
     # Cycle 0: start pulse + a
     dut.uio_in.value = 0b00000001
